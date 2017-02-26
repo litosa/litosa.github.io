@@ -1,0 +1,20 @@
+.list-item:hover {
+    cursor: pointer;
+}
+
+.list-item {
+    display: flex;
+    padding: 10px;
+}
+
+.list-item > .country-remove-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0.2;
+}
+
+.list-item > .country-remove-container.container-hidden {
+    overflow: hidden;
+    flex-grow: 0;
+}

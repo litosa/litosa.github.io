@@ -1,0 +1,239 @@
+class ReactAjax extends React.Component {    
+
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            countries: [],
+            filteredCountries: [],
+            isLoading: true
+        };
+
+        this.handleChangeFilterCountry = this.handleChangeFilterCountry.bind(this);
+    }
+
+    componentDidMount() {
+        setTimeout(() => {
+            this.getCountries()
+        }, 1000
+        );
+    }
+
+    getCountries() {
+        fetch('http://forverkliga.se/JavaScript/api/simple.php?world=whatever')
+            .then(response => response.json())
+            .then(json => {
+                const countries = Country.convertJsonArray(json);
+                this.setState({
+                    countries: countries,
+                    filteredCountries: countries,
+                    isLoading: false
+                });
+            });
+    }
+
+    handleChangeFilterCountry(event) {
+        const input = event.target.value.toLowerCase();
+        const filteredCountries = this.state.countries.filter(c =>
+            c.continent.toLowerCase().includes(input) ||
+            c.name.toLowerCase().includes(input));
+
+        this.setState({
+            filteredCountries: filteredCountries
+        });
+    }
+
+    handleBlurUpdateCountry(name, newName) {
+        let country = this.state.filteredCountries.find(c => c.name === name);
+        country.name = newName;
+    }
+
+    handleRemoveCountry(name) {
+        const countries = this.state.countries.filter(c => c.name !== name);
+        const filteredCountries = this.state.filteredCountries.filter(c => c.name !== name);
+
+        this.setState({
+            countries: countries,
+            filteredCountries: filteredCountries
+        });
+    }
+
+    render() {
+        return (
+            <div>
+                {this.state.isLoading ? (
+                    <h1 className="text-center">
+                        <i className="fa fa-cog fa-spin fa-3x fa-fw"></i>
+                    </h1>
+                ) :
+                    (<div>
+                        <input onChange={this.handleChangeFilterCountry}
+                               className="form-control"
+                               placeholder="Filtrera" />
+                        <br />
+                        <CountryList countries={this.state.filteredCountries}
+                                     onRemove={this.handleRemoveCountry.bind(this)}
+                                     onBlur={this.handleBlurUpdateCountry.bind(this)} />
+                        <hr />
+                        <h4 className="text-right">
+                            Antal Länder: {this.state.filteredCountries.length}
+                        </h4>
+                    </div>
+                    )}
+            </div>
+        )
+    }
+}
+
+class CountryList extends React.Component {
+    constructor() {
+        super();
+        this.state = {
+            selectedCountry: null
+        }
+    }
+
+    handleBlurUpdateCountry(name, newName) {
+        this.props.onBlur(name, newName);
+    }
+
+    handleRemoveCountry(name) {
+        this.props.onRemove(name);
+    }
+
+    render() {
+        let countries = this.props.countries.map((country, index) => {
+            return <CountryListItem key={index}
+                                    country={country} 
+                                    onRemove={this.handleRemoveCountry.bind(this)} 
+                                    onBlur={this.handleBlurUpdateCountry.bind(this)} />
+        });
+
+        return (
+            <div>
+                {countries}
+            </div>
+        )
+    }
+}
+
+class CountryListItem extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            isEdit: false,
+            isSelected: false
+        }
+    }
+
+    handleBlurUpdateCountry(name, newName) {
+        this.props.onBlur(name, newName);
+
+        this.setState({
+            isEdit: false
+        })
+    }
+
+    handleClick(name, event) {
+        event.stopPropagation();
+        if (event.target.id === 'country-name') {
+            this.setState({
+                isEdit: true,
+                isSelected: false
+            });
+        } else if (event.target.id === 'country-remove' || event.target.id === 'remove-span') {
+            this.props.onRemove(name);
+        } else {
+            this.setState({
+                isSelected: !this.state.isSelected,
+            });
+        }
+    }
+
+    render() {
+        if (this.state.isEdit) {
+            return (
+                <CountryListItemEdit country={this.props.country}
+                                     onBlur={this.handleBlurUpdateCountry.bind(this)} />
+            )
+        } else {
+            return (
+                <div onClick={this.handleClick.bind(this, null)}
+                     className="thumbnail list-item">                    
+                    <div>
+                        <div>
+                            <a id="country-name"
+                               onClick={this.handleClick.bind(this, null)}
+                               className="country-link">
+                               {this.props.country.name ? this.props.country.name : 'Okänt'}
+                            </a>
+                            <p>{this.props.country.continent}</p>
+                            <p>{this.props.country.pFemale}</p>
+                            <p>{this.props.country.population}</p>
+                        </div>
+                    </div>
+                    <div onClick={this.handleClick.bind(this, this.props.country.name)}
+                         className={'country-remove-container ' + (this.state.isSelected ? '' : 'container-hidden')}
+                         id="country-remove">
+                        <span id="remove-span" className="fa fa-2x fa-trash-o"></span>
+                    </div>
+                </div>
+            )
+        }
+    }    
+}
+
+class CountryListItemEdit extends React.Component {
+
+    constructor(props) {
+        super(props);
+    }    
+
+    handleBlurUpdateCountry(name, event) {
+        this.props.onBlur(name, event.target.value);
+    }
+
+    render() {
+
+        return (
+            <div className="thumbnail list-item">
+                <div>
+                    <input className='form-control'
+                           defaultValue={this.props.country.name}
+                           onBlur={this.handleBlurUpdateCountry.bind(this, this.props.country.name)} />
+                    <p>{this.props.country.continent}</p>
+                    <p>{this.props.country.pFemale}</p>
+                    <p>{this.props.country.population}</p>
+                </div>
+            </div>
+        )
+    }
+}
+
+
+class Country {
+    continent;
+    name;
+    pFemale;
+    population;
+
+    constructor(continent, name, pFemale, population) {
+        this.continent = continent;
+        this.name = name;
+        this.pFemale = pFemale;
+        this.population = population;
+    }
+
+    static convertObjFromJsonArray(json) {
+        return new Country(json.continent, json.name, json.pFemale, json.population);
+    }
+
+    static convertJsonArray(jsonArray) {
+        return jsonArray.map(this.convertObjFromJsonArray);
+    }
+}
+
+ReactDOM.render(
+    <ReactAjax />,
+    document.getElementById('app')
+);
