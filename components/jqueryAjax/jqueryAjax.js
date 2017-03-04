@@ -31,6 +31,7 @@
             return response.json();
         })
         .then(function (data) {
+            console.log(data);
             responseObject = data;
         })
         .catch(function (err) {
@@ -57,7 +58,7 @@
     function printOutFemalePopulation() {
         for (var country of responseObject) {
             if (country.name === 'Zimbabwe') {
-                femalePopulationCounter = country.population / country.pFemale;
+                femalePopulationCounter = country.population * country.pFemale;
             }
         }
         var roundedValue = Math.round(femalePopulationCounter);
@@ -80,7 +81,7 @@
     }
 
     function printOutHighestPopulation() {
-        var countryWithHighestPopulation = '';
+        var continentWithHighestPopulation = '';
         var highest = Number.NEGATIVE_INFINITY;
         var tmp;
 
@@ -88,10 +89,10 @@
             tmp = country.population;
             if (country.population > highest) {
                 highest = country.population;
-                countryWithHighestPopulation = country.name
+                continentWithHighestPopulation = country.continent
             }
         }
-        highestPopulation.innerHTML = countryWithHighestPopulation;
+        highestPopulation.innerHTML = continentWithHighestPopulation;
     }
 
 })();
